@@ -4,8 +4,8 @@ import httpMethods from 'http-client'
 import openWebSocket from 'open-websocket'
 
 const endpoints = {
-  base: 'wss://stream.binance.com:9443/ws',
-  futures: 'wss://fstream.binance.com/ws',
+  base: 'wss://stream.binance.us:9443/ws',
+  futures: 'wss://fstream.binance.us/ws',
 }
 
 const depthTransform = m => ({
