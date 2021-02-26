@@ -2,16 +2,16 @@
 
 > A complete API wrapper for the [Binance Us](https://binance.us) API.
 
-Fork of [Binance API Node](https://github.com/binance-exchange/binance-api-node)
+Fork of [Binance API Node](https://github.com/binance-exchange/node-binance-us)
 
 Note: This wrapper uses Promises, if they are not supported in your environment, you might
 want to add [a polyfill](https://github.com/stefanpenner/es6-promise) for them.
 
-For PRs or issues, head over to the [source repository](https://github.com/Ashlar/binance-api-node).
+For PRs or issues, head over to the [source repository](https://github.com/ksubedi/node-binance-us).
 
 ### Installation
 
-    yarn add binance-api-node
+    yarn add node-binance-us
 
 ### Getting started
 
@@ -20,7 +20,7 @@ you don't plan on doing authenticated calls. You can create an api key
 [here](https://www.binance.com/userCenter/createApi.html).
 
 ```js
-import Binance from 'binance-api-node'
+import Binance from 'node-binance-us'
 
 const client = Binance()
 
@@ -37,7 +37,7 @@ client.time().then(time => console.log(time))
 If you do not have an appropriate babel config, you will need to use the basic commonjs requires.
 
 ```js
-const Binance = require('binance-api-node').default
+const Binance = require('node-binance-us').default
 ```
 
 Every REST method returns a Promise, making this library [async await](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function) ready.
@@ -3197,7 +3197,7 @@ An utility error code map is also being exported by the package in order for you
 conditionals upon specific errors that could occur while using the API.
 
 ```js
-import Binance, { ErrorCodes } from 'binance-api-node'
+import Binance, { ErrorCodes } from 'node-binance-us'
 
 console.log(ErrorCodes.INVALID_ORDER_TYPE) // -1116
 ```
