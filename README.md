@@ -2,7 +2,7 @@
 
 > A complete API wrapper for the [Binance Us](https://binance.us) API.
 
-Fork of [Binance API Node](https://github.com/binance-exchange/node-binance-us)
+Fork of [Binance API Node](https://github.com/binance-exchange/binance-api-node)
 
 Note: This wrapper uses Promises, if they are not supported in your environment, you might
 want to add [a polyfill](https://github.com/stefanpenner/es6-promise) for them.
