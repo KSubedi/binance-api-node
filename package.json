@@ -1,7 +1,7 @@
 {
   "name": "node-binance-us",
-  "version": "0.10.32",
-  "description": "A node API wrapper for binance.us, fork of node api for binance.com.",
+  "version": "0.10.34",
+  "description": "A node API wrapper for binance.us.",
   "main": "dist",
   "files": [
     "dist",

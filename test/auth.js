@@ -218,19 +218,6 @@ const main = () => {
     t.truthy(clean)
     t.true(typeof clean === 'function')
   })
-
-  test('[FUTURES-REST] walletBalance', async t => {
-    const walletBalance = await client.futuresAccountBalance()
-    t.truthy(walletBalance)
-    checkFields(t, walletBalance[0], [
-      'asset',
-      'balance',
-      'crossWalletBalance',
-      'crossUnPnl',
-      'availableBalance',
-      'maxWithdrawAmount',
-    ])
-  })
 }
 
 main()

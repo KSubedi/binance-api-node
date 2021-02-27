@@ -5,9 +5,7 @@ declare module 'node-binance-us' {
     apiSecret?: string
     getTime?: () => number | Promise<number>
     httpBase?: string
-    httpFutures?: string
     wsBase?: string
-    wsFutures?: string
   }): Binance
 
   export enum ErrorCodes {
@@ -166,7 +164,6 @@ declare module 'node-binance-us' {
 
   export interface GetInfo {
     spot: GetInfoDetails
-    futures: GetInfoDetails
   }
 
   export type GetInfoDetails = {
@@ -305,52 +302,6 @@ declare module 'node-binance-us' {
     universalTransferHistory(
       options: UniversalTransferHistory,
     ): Promise<UniversalTransferHistoryResponse>
-    futuresPing(): Promise<boolean>
-    futuresTime(): Promise<number>
-    futuresExchangeInfo(): Promise<ExchangeInfo>
-    futuresBook(options: { symbol: string; limit?: number }): Promise<OrderBook>
-    futuresCandles(options: CandlesOptions): Promise<CandleChartResult[]>
-    futuresAggTrades(options?: {
-      symbol: string
-      fromId?: string
-      startTime?: number
-      endTime?: number
-      limit?: number
-    }): Promise<AggregatedTrade[]>
-    futuresTrades(options: { symbol: string; limit?: number }): Promise<TradeResult[]>
-    futuresDailyStats(options?: { symbol: string }): Promise<DailyStatsResult | DailyStatsResult[]>
-    futuresPrices(): Promise<{ [index: string]: string }>
-    futuresAllBookTickers(): Promise<{ [key: string]: Ticker }>
-    futuresMarkPrice(): Promise<MarkPriceResult>
-    futuresAllForceOrders(options?: {
-      symbol?: string
-      startTime?: number
-      endTime?: number
-      limit?: number
-    }): Promise<AllForceOrdersResult[]>
-    futuresFundingRate(options: {
-      symbol: string
-      startTime?: number
-      endTime?: number
-      limit?: number
-    }): Promise<FundingRateResult[]>
-    futuresOrder(options: NewOrder): Promise<Order>
-    futuresCancelOrder(options: {
-      symbol: string
-      orderId: number
-      useServerTime?: boolean
-    }): Promise<CancelOrderResult>
-    futuresOpenOrders(options: {
-      symbol?: string
-      useServerTime?: boolean
-    }): Promise<QueryOrderResult[]>
-    futuresPositionRisk(options?: { recvWindow: number }): Promise<PositionRiskResult[]>
-    futuresAccountBalance(options?: { recvWindow: number }): Promise<FuturesBalanceResult[]>
-    futuresPositionMode(options?: { recvWindow: number }): Promise<PositionModeResult>
-    futuresPositionModeChange(options: {
-      dualSidePosition: string
-      recvWindow: number
-    }): Promise<ChangePositionModeResult>
     marginOrder(options: NewOrder): Promise<Order>
     marginAllOrders(options: {
       symbol: string
@@ -412,21 +363,6 @@ declare module 'node-binance-us' {
       callback: (depth: Depth) => void,
       transform?: boolean,
     ) => ReconnectingWebSocketHandler
-    futuresDepth: (
-      pair: string | string[],
-      callback: (depth: Depth) => void,
-      transform?: boolean,
-    ) => ReconnectingWebSocketHandler
-    partialDepth: (
-      options: { symbol: string; level: number } | { symbol: string; level: number }[],
-      callback: (depth: PartialDepth) => void,
-      transform?: boolean,
-    ) => ReconnectingWebSocketHandler
-    futuresPartialDepth: (
-      options: { symbol: string; level: number } | { symbol: string; level: number }[],
-      callback: (depth: PartialDepth) => void,
-      transform?: boolean,
-    ) => ReconnectingWebSocketHandler
     ticker: (
       pair: string | string[],
       callback: (ticker: Ticker) => void,
@@ -445,20 +381,9 @@ declare module 'node-binance-us' {
       pairs: string | string[],
       callback: (trade: Trade) => void,
     ) => ReconnectingWebSocketHandler
-    futuresLiquidations: (
-      symbol: string | string[],
-      callback: (forecOrder: ForceOrder) => void,
-    ) => ReconnectingWebSocketHandler
-    futuresAllLiquidations: (
-      callback: (forecOrder: ForceOrder) => void,
-    ) => ReconnectingWebSocketHandler
-
     user: (callback: (msg: UserDataStreamEvent) => void) => Promise<ReconnectingWebSocketHandler>
     marginUser: (
       callback: (msg: OutboundAccountInfo | ExecutionReport) => void,
-    ) => Promise<ReconnectingWebSocketHandler>
-    futuresUser: (
-      callback: (msg: OutboundAccountInfo | ExecutionReport | AccountUpdate) => void,
     ) => Promise<ReconnectingWebSocketHandler>
   }
 
@@ -1061,17 +986,7 @@ declare module 'node-binance-us' {
     unRealizedProfit: string
     positionSide: string
   }
-
-  export interface FuturesBalanceResult {
-    accountAlias: string
-    asset: string
-    balance: string
-    crossWalletBalance: string
-    crossUnPnl: string
-    availableBalance: string
-    maxWithdrawAmount: string
-  }
-
+  
   export interface ChangePositionModeResult {
     code: number
     msg: string

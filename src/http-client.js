@@ -4,13 +4,11 @@ import zip from 'lodash.zipobject'
 import 'isomorphic-fetch'
 
 const BASE = 'https://api.binance.us'
-const FUTURES = 'https://fapi.binance.us'
 
 const defaultGetTime = () => Date.now()
 
 const info = {
-  spot: {},
-  futures: {}
+  spot: {}
 }
 
 /**
@@ -40,7 +38,7 @@ const responseHandler = res => {
     return
   }
 
-  const marketName = res.url.includes(FUTURES) ? 'futures' : 'spot'
+  const marketName = 'spot'
 
   Object.keys(headersMapping).forEach(key => {
     const outKey = headersMapping[key]
@@ -114,7 +112,7 @@ const checkParams = (name, payload, requires = []) => {
 const publicCall = ({ endpoints }) => (path, data, method = 'GET', headers = {}) =>
   sendResult(
     fetch(
-      `${!path.includes('/fapi') ? endpoints.base : endpoints.futures}${path}${makeQueryString(
+      `${endpoints.base}${path}${makeQueryString(
         data,
       )}`,
       {
@@ -180,7 +178,7 @@ const privateCall = ({ apiKey, apiSecret, endpoints, getTime = defaultGetTime, p
 
     return sendResult(
       fetch(
-        `${!path.includes('/fapi') ? endpoints.base : endpoints.futures}${path}${
+        `${endpoints.base}${path}${
           noData ? '' : makeQueryString(newData)
         }`,
         {
@@ -280,7 +278,6 @@ const aggTrades = (pubCall, payload, endpoint = '/api/v3/aggTrades') =>
 export default opts => {
   const endpoints = {
     base: (opts && opts.httpBase) || BASE,
-    futures: (opts && opts.httpFutures) || FUTURES,
   }
 
   const pubCall = publicCall({ ...opts, endpoints })
@@ -365,11 +362,6 @@ export default opts => {
     marginCloseDataStream: payload =>
       privCall('/sapi/v1/userDataStream', payload, 'DELETE', false, true),
 
-    futuresGetDataStream: () => privCall('/fapi/v1/listenKey', null, 'POST', true),
-    futuresKeepDataStream: payload => privCall('/fapi/v1/listenKey', payload, 'PUT', false, true),
-    futuresCloseDataStream: payload =>
-      privCall('/fapi/v1/listenKey', payload, 'DELETE', false, true),
-
     marginAllOrders: payload => privCall('/sapi/v1/margin/allOrders', payload),
     marginOrder: payload => order(privCall, payload, '/sapi/v1/margin/order'),
     marginCancelOrder: payload => privCall('/sapi/v1/margin/order', payload, 'DELETE'),
@@ -383,43 +375,5 @@ export default opts => {
     marginCreateIsolated: payload => privCall('/sapi/v1/margin/isolated/create', payload, 'POST'),
     marginIsolatedTransfer: payload => privCall('/sapi/v1/margin/isolated/transfer', payload, 'POST'),
     marginIsolatedTransferHistory: payload => privCall('/sapi/v1/margin/isolated/transfer', payload),
-
-    futuresPing: () => pubCall('/fapi/v1/ping').then(() => true),
-    futuresTime: () => pubCall('/fapi/v1/time').then(r => r.serverTime),
-    futuresExchangeInfo: () => pubCall('/fapi/v1/exchangeInfo'),
-    futuresBook: payload => book(pubCall, payload, '/fapi/v1/depth'),
-    futuresAggTrades: payload => aggTrades(pubCall, payload, '/fapi/v1/aggTrades'),
-    futuresMarkPrice: payload => pubCall('/fapi/v1/premiumIndex', payload),
-    futuresAllForceOrders: payload => pubCall('/fapi/v1/allForceOrders', payload),
-    futuresCandles: payload => candles(pubCall, payload, '/fapi/v1/klines'),
-    futuresTrades: payload =>
-      checkParams('trades', payload, ['symbol']) && pubCall('/fapi/v1/trades', payload),
-    futuresDailyStats: payload => pubCall('/fapi/v1/ticker/24hr', payload),
-    futuresPrices: () =>
-      pubCall('/fapi/v1/ticker/price').then(r =>
-        (Array.isArray(r) ? r : [r]).reduce((out, cur) => ((out[cur.symbol] = cur.price), out), {}),
-      ),
-    futuresAllBookTickers: () =>
-      pubCall('/fapi/v1/ticker/bookTicker').then(r =>
-        (Array.isArray(r) ? r : [r]).reduce((out, cur) => ((out[cur.symbol] = cur), out), {}),
-      ),
-    futuresFundingRate: payload =>
-      checkParams('fundingRate', payload, ['symbol']) && pubCall('/fapi/v1/fundingRate', payload),
-
-    futuresOrder: payload => order(privCall, payload, '/fapi/v1/order'),
-    futuresGetOrder: payload => privCall('/fapi/v1/order', payload),
-    futuresCancelOrder: payload => privCall('/fapi/v1/order', payload, 'DELETE'),
-    futuresOpenOrders: payload => privCall('/fapi/v1/openOrders', payload),
-    futuresAllOrders: payload => privCall('/fapi/v1/allOrders', payload),
-    futuresPositionRisk: payload => privCall('/fapi/v2/positionRisk', payload),
-    futuresAccountBalance: payload => privCall('/fapi/v2/balance', payload),
-    futuresUserTrades: payload => privCall('/fapi/v1/userTrades', payload),
-    futuresPositionMode: payload => privCall('/fapi/v1/positionSide/dual', payload),
-    futuresPositionModeChange: payload => privCall('/fapi/v1/positionSide/dual', payload, 'POST'),
-    futuresLeverage: payload => privCall('/fapi/v1/leverage', payload, 'POST'),
-    futuresMarginType: payload => privCall('/fapi/v1/marginType', payload, 'POST'),
-    futuresPositionMargin: payload => privCall('/fapi/v1/positionMargin', payload, 'POST'),
-    futuresMarginHistory: payload => privCall('/fapi/v1/positionMargin/history', payload),
-    futuresIncome: payload => privCall('/fapi/v1/income', payload),
   }
 }

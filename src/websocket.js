@@ -5,7 +5,6 @@ import openWebSocket from 'open-websocket'
 
 const endpoints = {
   base: 'wss://stream.binance.us:9443/ws',
-  futures: 'wss://fstream.binance.us/ws',
 }
 
 const depthTransform = m => ({
@@ -18,34 +17,18 @@ const depthTransform = m => ({
   askDepth: m.a.map(a => zip(['price', 'quantity'], a)),
 })
 
-const futuresDepthTransform = m => ({
-  eventType: m.e,
-  eventTime: m.E,
-  transactionTime: m.T,
-  symbol: m.s,
-  firstUpdateId: m.U,
-  finalUpdateId: m.u,
-  prevFinalUpdateId: m.pu,
-  bidDepth: m.b.map(b => zip(['price', 'quantity'], b)),
-  askDepth: m.a.map(a => zip(['price', 'quantity'], a)),
-})
-
 const depth = (payload, cb, transform = true, variator) => {
   const cache = (Array.isArray(payload) ? payload : [payload]).map(symbol => {
     const [symbolName, updateSpeed] = symbol.toLowerCase().split('@');
     const w = openWebSocket(
-      `${
-        variator === 'futures' ? endpoints.futures : endpoints.base
-      }/${symbolName}@depth${updateSpeed ? `@${updateSpeed}` : ''}`,
+      `${endpoints.base}/${symbolName}@depth${updateSpeed ? `@${updateSpeed}` : ''}`,
     )
     w.onmessage = msg => {
       const obj = JSON.parse(msg.data)
 
       cb(
         transform
-          ? variator === 'futures'
-            ? futuresDepthTransform(obj)
-            : depthTransform(obj)
+          ? depthTransform(obj)
           : obj,
       )
     }
@@ -65,35 +48,19 @@ const partialDepthTransform = (symbol, level, m) => ({
   asks: m.asks.map(a => zip(['price', 'quantity'], a)),
 })
 
-const futuresPartDepthTransform = (level, m) => ({
-  level,
-  eventType: m.e,
-  eventTime: m.E,
-  transactionTime: m.T,
-  symbol: m.s,
-  firstUpdateId: m.U,
-  finalUpdateId: m.u,
-  prevFinalUpdateId: m.pu,
-  bidDepth: m.b.map(b => zip(['price', 'quantity'], b)),
-  askDepth: m.a.map(a => zip(['price', 'quantity'], a)),
-})
 
 const partialDepth = (payload, cb, transform = true, variator) => {
   const cache = (Array.isArray(payload) ? payload : [payload]).map(({ symbol, level }) => {
     const [symbolName, updateSpeed] = symbol.toLowerCase().split('@');
     const w = openWebSocket(
-      `${
-        variator === 'futures' ? endpoints.futures : endpoints.base
-      }/${symbolName}@depth${level}${updateSpeed ? `@${updateSpeed}` : ''}`,
+      `${endpoints.base}/${symbolName}@depth${level}${updateSpeed ? `@${updateSpeed}` : ''}`,
     )
     w.onmessage = msg => {
       const obj = JSON.parse(msg.data)
 
       cb(
         transform
-          ? variator === 'futures'
-            ? futuresPartDepthTransform(level, obj)
-            : partialDepthTransform(symbol, level, obj)
+          ? partialDepthTransform(symbol, level, obj)
           : obj,
       )
     }
@@ -112,9 +79,7 @@ const candles = (payload, interval, cb, transform = true, variator) => {
 
   const cache = (Array.isArray(payload) ? payload : [payload]).map(symbol => {
     const w = openWebSocket(
-      `${
-        variator === 'futures' ? endpoints.futures : endpoints.base
-      }/${symbol.toLowerCase()}@kline_${interval}`,
+      `${endpoints.base}/${symbol.toLowerCase()}@kline_${interval}`,
     )
     w.onmessage = msg => {
       const obj = JSON.parse(msg.data)
@@ -196,42 +161,17 @@ const tickerTransform = m => ({
   totalTrades: m.n,
 })
 
-const futuresTickerTransform = m => ({
-  eventType: m.e,
-  eventTime: m.E,
-  symbol: m.s,
-  priceChange: m.p,
-  priceChangePercent: m.P,
-  weightedAvg: m.w,
-  curDayClose: m.c,
-  closeTradeQuantity: m.Q,
-  open: m.o,
-  high: m.h,
-  low: m.l,
-  volume: m.v,
-  volumeQuote: m.q,
-  openTime: m.O,
-  closeTime: m.C,
-  firstTradeId: m.F,
-  lastTradeId: m.L,
-  totalTrades: m.n,
-})
-
 const ticker = (payload, cb, transform = true, variator) => {
   const cache = (Array.isArray(payload) ? payload : [payload]).map(symbol => {
     const w = openWebSocket(
-      `${
-        variator === 'futures' ? endpoints.futures : endpoints.base
-      }/${symbol.toLowerCase()}@ticker`,
+      `${endpoints.base}/${symbol.toLowerCase()}@ticker`,
     )
 
     w.onmessage = msg => {
       const obj = JSON.parse(msg.data)
       cb(
         transform
-          ? variator === 'futures'
-            ? futuresTickerTransform(obj)
-            : tickerTransform(obj)
+          ? tickerTransform(obj)
           : obj,
       )
     }
@@ -245,16 +185,14 @@ const ticker = (payload, cb, transform = true, variator) => {
 
 const allTickers = (cb, transform = true, variator) => {
   const w = new openWebSocket(
-    `${variator === 'futures' ? endpoints.futures : endpoints.base}/!ticker@arr`,
+    `${endpoints.base}/!ticker@arr`,
   )
 
   w.onmessage = msg => {
     const arr = JSON.parse(msg.data)
     cb(
       transform
-        ? variator === 'futures'
-          ? arr.map(m => futuresTickerTransform(m))
-          : arr.map(m => tickerTransform(m))
+        ? arr.map(m => tickerTransform(m))
         : arr,
     )
   }
@@ -276,34 +214,17 @@ const aggTradesTransform = m => ({
   lastId: m.l,
 })
 
-const futuresAggTradesTransform = m => ({
-  eventType: m.e,
-  eventTime: m.E,
-  symbol: m.s,
-  aggId: m.a,
-  price: m.p,
-  quantity: m.q,
-  firstId: m.f,
-  lastId: m.l,
-  timestamp: m.T,
-  isBuyerMaker: m.m,
-})
-
 const aggTrades = (payload, cb, transform = true, variator) => {
   const cache = (Array.isArray(payload) ? payload : [payload]).map(symbol => {
     const w = openWebSocket(
-      `${
-        variator === 'futures' ? endpoints.futures : endpoints.base
-      }/${symbol.toLowerCase()}@aggTrade`,
+      `${endpoints.base}/${symbol.toLowerCase()}@aggTrade`,
     )
     w.onmessage = msg => {
       const obj = JSON.parse(msg.data)
 
       cb(
         transform
-          ? variator === 'futures'
-            ? futuresAggTradesTransform(obj)
-            : aggTradesTransform(obj)
+          ? aggTradesTransform(obj)
           : obj,
       )
     }
@@ -313,47 +234,6 @@ const aggTrades = (payload, cb, transform = true, variator) => {
 
   return options =>
     cache.forEach(w => w.close(1000, 'Close handle was called', { keepClosed: true, ...options }))
-}
-
-const futuresLiqsTransform = m => ({
-  symbol: m.s,
-  price: m.p,
-  origQty: m.q,
-  lastFilledQty: m.l,
-  accumulatedQty: m.z,
-  averagePrice: m.ap,
-  status: m.X,
-  timeInForce: m.f,
-  type: m.o,
-  side: m.S,
-  time: m.T,
-})
-
-const futuresLiquidations = (payload, cb, transform = true) => {
-  const cache = (Array.isArray(payload) ? payload : [payload]).map(symbol => {
-    const w = openWebSocket(`${endpoints.futures}/${symbol.toLowerCase()}@forceOrder`)
-    w.onmessage = msg => {
-      const obj = JSON.parse(msg.data)
-
-      cb(transform ? futuresLiqsTransform(obj.o) : obj)
-    }
-
-    return w
-  })
-
-  return options =>
-    cache.forEach(w => w.close(1000, 'Close handle was called', { keepClosed: true, ...options }))
-}
-
-const futuresAllLiquidations = (cb, transform = true) => {
-  const w = new openWebSocket(`${endpoints.futures}/!forceOrder@arr`)
-
-  w.onmessage = msg => {
-    const obj = JSON.parse(msg.data)
-    cb(transform ? futuresLiqsTransform(obj.o) : obj)
-  }
-
-  return options => w.close(1000, 'Close handle was called', { keepClosed: true, ...options })
 }
 
 const tradesTransform = m => ({
@@ -454,95 +334,11 @@ const userTransforms = {
   }),
 }
 
-const futuresUserTransforms = {
-  // https://binance-docs.github.io/apidocs/futures/en/#event-margin-call
-  MARGIN_CALL: m => ({
-    eventTime: m.E,
-    crossWalletBalance: m.cw,
-    eventType: 'MARGIN_CALL',
-    positions: m.p.reduce((out, cur) => {
-      out[cur.a] = {
-        symbol: cur.s,
-        positionSide: cur.ps,
-        positionAmount: cur.pa,
-        marginType: cur.mt,
-        isolatedWallet: cur.iw,
-        markPrice: cur.mp,
-        unrealizedPnL: cur.up,
-        maintenanceMarginRequired: cur.mm,
-      }
-      return out
-    }, {}),
-  }),
-  // https://binance-docs.github.io/apidocs/futures/en/#event-balance-and-position-update
-  ACCOUNT_UPDATE: m => ({
-    eventTime: m.E,
-    transactionTime: m.T,
-    eventType: 'ACCOUNT_UPDATE',
-    eventReasonType: m.a.m,
-    balances: m.a.B.map(b => ({
-      asset: b.a,
-      walletBalance: b.wb,
-      crossWalletBalance: b.cw,
-    })),
-    positions: m.a.P.map(p => ({
-      symbol: p.s,
-      positionAmount: p.pa,
-      entryPrice: p.ep,
-      accumulatedRealized: p.cr,
-      unrealizedPnL: p.up,
-      marginType: p.mt,
-      isolatedWallet: p.iw,
-      positionSide: p.ps,
-    })),
-  }),
-  // https://binance-docs.github.io/apidocs/futures/en/#event-order-update
-  ORDER_TRADE_UPDATE: m => ({
-    eventType: 'ORDER_TRADE_UPDATE',
-    eventTime: m.E,
-    transactionTime: m.T,
-    symbol: m.o.s,
-    clientOrderId: m.o.c,
-    side: m.o.S,
-    orderType: m.o.o,
-    timeInForce: m.o.f,
-    quantity: m.o.q,
-    price: m.o.p,
-    averagePrice: m.o.ap,
-    stopPrice: m.o.sp,
-    executionType: m.o.x,
-    orderStatus: m.o.X,
-    orderId: m.o.i,
-    lastTradeQuantity: m.o.l,
-    totalTradeQuantity: m.o.z,
-    priceLastTrade: m.o.L,
-    commissionAsset: m.o.N,
-    commission: m.o.n,
-    orderTime: m.o.T,
-    tradeId: m.o.t,
-    bidsNotional: m.o.b,
-    asksNotional: m.o.a,
-    isMaker: m.o.m,
-    isReduceOnly: m.o.R,
-    workingType: m.o.wt,
-    originalOrderType: m.o.ot,
-    positionSide: m.o.ps,
-    closePosition: m.o.cp,
-    activationPrice: m.o.AP,
-    callbackRate: m.o.cr,
-    realizedProfit: m.o.rp,
-  }),
-}
-
-export const userEventHandler = (cb, transform = true, variator) => msg => {
+export const userEventHandler = (cb, transform = true) => msg => {
   const { e: type, ...rest } = JSON.parse(msg.data)
 
   cb(
-    variator === 'futures'
-      ? transform && futuresUserTransforms[type]
-        ? futuresUserTransforms[type](rest)
-        : { type, ...rest }
-      : transform && userTransforms[type]
+    transform && userTransforms[type]
       ? userTransforms[type](rest)
       : { type, ...rest },
   )
@@ -603,9 +399,9 @@ const user = (opts, variator) => (cb, transform) => {
     return getDataStream()
       .then(({ listenKey }) => {
         w = openWebSocket(
-          `${variator === 'futures' ? endpoints.futures : endpoints.base}/${listenKey}`,
+          `${endpoints.base}/${listenKey}`,
         )
-        w.onmessage = msg => userEventHandler(cb, transform, variator)(msg)
+        w.onmessage = msg => userEventHandler(cb, transform)(msg)
 
         currentListenKey = listenKey
 
@@ -632,10 +428,6 @@ export default opts => {
     endpoints.base = opts.wsBase
   }
 
-  if (opts && opts.wsFutures) {
-    endpoints.futures = opts.wsFutures
-  }
-
   return {
     depth,
     partialDepth,
@@ -647,17 +439,5 @@ export default opts => {
     user: user(opts),
 
     marginUser: user(opts, 'margin'),
-
-    futuresDepth: (payload, cb, transform) => depth(payload, cb, transform, 'futures'),
-    futuresPartialDepth: (payload, cb, transform) =>
-      partialDepth(payload, cb, transform, 'futures'),
-    futuresCandles: (payload, interval, cb, transform) =>
-      candles(payload, interval, cb, transform, 'futures'),
-    futuresTicker: (payload, cb, transform) => ticker(payload, cb, transform, 'futures'),
-    futuresAllTickers: (cb, transform) => allTickers(cb, transform, 'futures'),
-    futuresAggTrades: (payload, cb, transform) => aggTrades(payload, cb, transform, 'futures'),
-    futuresLiquidations,
-    futuresAllLiquidations,
-    futuresUser: user(opts, 'futures'),
   }
 }
